@@ -1,78 +1,80 @@
 package org.firstinspires.ftc.teamcode.TESTING;
 
 
+import android.app.Notification;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 
 import org.firstinspires.ftc.teamcode.roadrunner.MecanumDrive;
 import org.firstinspires.ftc.teamcode.roadrunner.PinpointDrive;
 
-import com.qualcomm.robotcore.hardware.HardwareMap;
-
 @Autonomous
-public class actionTesting extends LinearOpMode {
+public class flyWheelTesting extends LinearOpMode {
 
 
-    public class Claw {
-        Servo leftClaw; //port 0
-        Servo rightClaw; // port 1
+    public class flyWheel{
+        DcMotor leftWheel;
+        DcMotor rightWheel;
 
-        public Claw(HardwareMap hardwareMap) {
-            leftClaw = hardwareMap.get(Servo.class, "leftClaw"); //port 0
-            rightClaw = hardwareMap.get(Servo.class, "rightClaw"); //port 1
+        public flyWheel(HardwareMap hardwareMap) {
+            leftWheel= hardwareMap.get(DcMotor.class, "left_wheel");
+            rightWheel = hardwareMap.get(DcMotor.class, "right_wheel");
         }
 
-            public class CloseClaw implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    leftClaw.setPosition(0.7);
-                    rightClaw.setPosition(0.1);
+        public class SpinUp implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                leftWheel.setPower(1.0);
+                rightWheel.setPower(1.0);
+                sleep(10000); //10 seconds
 
-                    return false;
-                }
+                return false;
             }
-            public Action closeClaw() {
-                return new CloseClaw();
-            }
-
-            public class OpenClaw implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    leftClaw.setPosition(0.5);
-                    rightClaw.setPosition(0.4);
-                    sleep(500);
-
-                    return false;
-                }
-            }
-            public Action openClaw() {
-                return new OpenClaw();
-            }
+        }
+        public Action spinUp() {
+            return new SpinUp();
+        }
     }
-
 
 
     @Override
     public void runOpMode(){
         //call all motors, servos, and code from other classes
-        Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));//START POSE!!!
-        Pose2d traj2 = new Pose2d(30, 0, Math.toRadians(0));
+        Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0)); //START POSE!!!
         MecanumDrive drive = new PinpointDrive(hardwareMap, startPose);
-        Claw claw = new Claw(hardwareMap);
+        flyWheel flyWheel = new flyWheel(hardwareMap);
+
+        DcMotor leftWheel = hardwareMap.get(DcMotor.class, "left_wheel");
+        DcMotor rightWheel = hardwareMap.get(DcMotor.class, "right_wheel");
+
 
                                     //INIT PHASE//
 
+
+
+        leftWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftWheel.setDirection(DcMotor.Direction.REVERSE);
+        leftWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftWheel.setPower(0);
+
+        rightWheel.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightWheel.setDirection(DcMotor.Direction.REVERSE);
+        rightWheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightWheel.setPower(0);
 
 
         waitForStart();
@@ -80,25 +82,9 @@ public class actionTesting extends LinearOpMode {
                                     //RUN PHASE//
 
         Actions.runBlocking(
-            drive.actionBuilder(startPose)
-                    .lineToX(30)
-                    .build()
+                flyWheel.spinUp()
         );
 
-        Actions.runBlocking(
-                new SequentialAction(
-                claw.openClaw(),
-                claw.closeClaw()
-                )
-        );
-
-        Actions.runBlocking(
-            drive.actionBuilder(traj2)
-                   .lineToX(0)
-                   .afterTime(0.5, claw.closeClaw())
-                   .lineToX(30)
-                   .build()
-        );
 
     }
 
@@ -228,6 +214,19 @@ public class actionTesting extends LinearOpMode {
         }
     }
 
+    //action to open claw
+    public class clawArmUp implements Action {
+        Servo clawArm;
+
+        public clawArmUp(Servo clawArm){
+            this.clawArm = clawArm;
+        }
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) { //write your action in here!
+            clawArm.setPosition(0.86);
+            return false;
+        }
+    }
+
+
 }
-
-
