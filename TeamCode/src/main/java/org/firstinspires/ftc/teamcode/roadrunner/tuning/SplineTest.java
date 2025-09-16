@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.roadrunner.PinpointDrive;
 import org.firstinspires.ftc.teamcode.roadrunner.TankDrive;
 
 
-@Disabled
+
 
 public final class SplineTest extends LinearOpMode {
     @Override
