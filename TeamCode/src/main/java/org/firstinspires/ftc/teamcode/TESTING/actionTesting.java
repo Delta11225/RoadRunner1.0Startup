@@ -61,6 +61,42 @@ public class actionTesting extends LinearOpMode {
             }
     }
 
+    public class Intake{
+        DcMotor intake; //port ?
+
+        public Intake(HardwareMap hardwareMap) {
+            intake = hardwareMap.get(DcMotor.class, "intake");
+        }
+            public class IntakeBall implements Action {
+                @Override
+                public boolean run(@NonNull TelemetryPacket packet) {
+                    intake.setPower(0.5);
+                    sleep(2500);
+                    intake.setPower(0);
+
+                    return false;
+                }
+            }
+            public Action intakeBall() {
+                return new IntakeBall();
+            }
+
+            public class OuttakeBall implements Action {
+                @Override
+                public boolean run(@NonNull TelemetryPacket packet){
+                    intake.setPower(-0.5);
+                    sleep(2500);
+                    intake.setPower(0);
+
+                    return false;
+                }
+
+            }
+            public Action outtakeBall(){
+                return new OuttakeBall();
+            }
+    }
+
 
 
     @Override
@@ -70,6 +106,7 @@ public class actionTesting extends LinearOpMode {
         Pose2d traj2 = new Pose2d(30, 0, Math.toRadians(0));
         MecanumDrive drive = new PinpointDrive(hardwareMap, startPose);
         Claw claw = new Claw(hardwareMap);
+        Intake intake = new Intake(hardwareMap);
 
                                     //INIT PHASE//
 
@@ -81,25 +118,10 @@ public class actionTesting extends LinearOpMode {
 
         Actions.runBlocking(
             drive.actionBuilder(startPose)
-                    .lineToX(30)
+                    .splineToLinearHeading(new Pose2d(20, -20, Math.toRadians(90)), Math.toRadians(90))
+                    .stopAndAdd(intake.intakeBall())
                     .build()
         );
-
-        Actions.runBlocking(
-                new SequentialAction(
-                claw.openClaw(),
-                claw.closeClaw()
-                )
-        );
-
-        Actions.runBlocking(
-            drive.actionBuilder(traj2)
-                   .lineToX(0)
-                   .afterTime(0.5, claw.closeClaw())
-                   .lineToX(30)
-                   .build()
-        );
-
     }
 
     //action to return the slide to ground
